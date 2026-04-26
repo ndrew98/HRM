@@ -50,21 +50,28 @@ const employees = [
   },
 ];
 
+const statusFilters = ["All", "Active", "Probation", "Suspended"];
+
 export default function EmployeesPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("All");
 
   const filteredEmployees = employees.filter((employee) => {
     const searchText = searchQuery.toLowerCase();
 
-    return (
+    const matchesSearch =
       employee.name.toLowerCase().includes(searchText) ||
       employee.staffId.toLowerCase().includes(searchText) ||
       employee.email.toLowerCase().includes(searchText) ||
       employee.department.toLowerCase().includes(searchText) ||
       employee.branch.toLowerCase().includes(searchText) ||
       employee.jobTitle.toLowerCase().includes(searchText) ||
-      employee.status.toLowerCase().includes(searchText)
-    );
+      employee.status.toLowerCase().includes(searchText);
+
+    const matchesStatus =
+      selectedStatus === "All" || employee.status === selectedStatus;
+
+    return matchesSearch && matchesStatus;
   });
 
   return (
@@ -117,6 +124,27 @@ export default function EmployeesPage() {
             className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
           />
         </div>
+
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {statusFilters.map((status) => {
+            const isSelected = selectedStatus === status;
+
+            return (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setSelectedStatus(status)}
+                className={
+                  isSelected
+                    ? "shrink-0 rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm"
+                    : "shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600"
+                }
+              >
+                {status}
+              </button>
+            );
+          })}
+        </div>
       </section>
 
       <section className="mt-5 px-4 pb-6">
@@ -129,12 +157,9 @@ export default function EmployeesPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="text-sm font-semibold text-emerald-700"
-          >
-            Filter
-          </button>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+            {selectedStatus}
+          </span>
         </div>
 
         {filteredEmployees.length > 0 ? (
