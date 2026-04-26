@@ -4,7 +4,10 @@ import { toast } from "sonner";
 
 import { ApprovalStatusBadge } from "@/app/features/approvals/components/ApprovalStatusBadge";
 import { ApprovalTimeline } from "@/app/features/approvals/components/ApprovalTimeline";
-import type { ApprovalItem } from "@/app/features/approvals/data";
+import type {
+  ApprovalItem,
+  ApprovalStatus,
+} from "@/app/features/approvals/data";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,15 +24,37 @@ type ApprovalDetailSheetProps = {
   approval: ApprovalItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAction: (approvalId: string, status: ApprovalStatus) => void;
 };
 
 export function ApprovalDetailSheet({
   approval,
   open,
   onOpenChange,
+  onAction,
 }: ApprovalDetailSheetProps) {
   if (!approval) {
     return null;
+  }
+
+  function handleAction(status: ApprovalStatus) {
+    if (!approval) return;
+
+    onAction(approval.id, status);
+
+    if (status === "Approved") {
+      toast.success("Request approved");
+    }
+
+    if (status === "Returned") {
+      toast.info("Request returned to employee");
+    }
+
+    if (status === "Rejected") {
+      toast.error("Request rejected");
+    }
+
+    onOpenChange(false);
   }
 
   return (
@@ -113,10 +138,7 @@ export function ApprovalDetailSheet({
                     type="button"
                     variant="outline"
                     className="rounded-full border-purple-200 text-purple-700"
-                    onClick={() => {
-                      toast.info("Request returned to employee");
-                      onOpenChange(false);
-                    }}
+                    onClick={() => handleAction("Returned")}
                   >
                     Return
                   </Button>
@@ -125,10 +147,7 @@ export function ApprovalDetailSheet({
                     type="button"
                     variant="outline"
                     className="rounded-full border-red-200 text-red-700"
-                    onClick={() => {
-                      toast.error("Request rejected");
-                      onOpenChange(false);
-                    }}
+                    onClick={() => handleAction("Rejected")}
                   >
                     Reject
                   </Button>
@@ -136,10 +155,7 @@ export function ApprovalDetailSheet({
                   <Button
                     type="button"
                     className="rounded-full bg-emerald-600 text-white hover:bg-emerald-700"
-                    onClick={() => {
-                      toast.success("Request approved");
-                      onOpenChange(false);
-                    }}
+                    onClick={() => handleAction("Approved")}
                   >
                     Approve
                   </Button>

@@ -38,37 +38,124 @@ const approvalFilters: {
     label: "Approved",
     value: "Approved",
   },
+  {
+    label: "Rejected",
+    value: "Rejected",
+  },
 ];
 
 export default function ApprovalsPage() {
+  const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>(approvals);
+
   const [selectedFilter, setSelectedFilter] = useState<"All" | ApprovalStatus>(
     "Pending",
   );
+
   const [selectedApproval, setSelectedApproval] = useState<ApprovalItem | null>(
     null,
   );
+
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const filteredApprovals =
     selectedFilter === "All"
-      ? approvals
-      : approvals.filter((approval) => approval.status === selectedFilter);
+      ? approvalItems
+      : approvalItems.filter((approval) => approval.status === selectedFilter);
 
-  const pendingCount = approvals.filter(
+  const pendingCount = approvalItems.filter(
     (approval) => approval.status === "Pending",
   ).length;
 
-  const returnedCount = approvals.filter(
+  const returnedCount = approvalItems.filter(
     (approval) => approval.status === "Returned",
   ).length;
 
-  const approvedCount = approvals.filter(
+  const approvedCount = approvalItems.filter(
     (approval) => approval.status === "Approved",
   ).length;
-
   function openApproval(approval: ApprovalItem) {
     setSelectedApproval(approval);
     setIsSheetOpen(true);
+  }
+
+  function handleApprovalAction(approvalId: string, status: ApprovalStatus) {
+    setApprovalItems((currentItems) =>
+      currentItems.map((approval) => {
+        if (approval.id !== approvalId) {
+          return approval;
+        }
+
+        return {
+          ...approval,
+          status,
+          currentStage:
+            status === "Approved"
+              ? "Completed"
+              : status === "Returned"
+                ? "Returned to Employee"
+                : status === "Rejected"
+                  ? "Rejected"
+                  : approval.currentStage,
+          timeline: approval.timeline.map((step) => {
+            if (step.status !== "Pending") {
+              return step;
+            }
+
+            return {
+              ...step,
+              status,
+              date: "Just now",
+              comment:
+                status === "Approved"
+                  ? "Approved from mobile workflow"
+                  : status === "Returned"
+                    ? "Returned for correction"
+                    : status === "Rejected"
+                      ? "Rejected from mobile workflow"
+                      : step.comment,
+            };
+          }),
+        };
+      }),
+    );
+
+    setSelectedApproval((currentApproval) => {
+      if (!currentApproval || currentApproval.id !== approvalId) {
+        return currentApproval;
+      }
+
+      return {
+        ...currentApproval,
+        status,
+        currentStage:
+          status === "Approved"
+            ? "Completed"
+            : status === "Returned"
+              ? "Returned to Employee"
+              : status === "Rejected"
+                ? "Rejected"
+                : currentApproval.currentStage,
+        timeline: currentApproval.timeline.map((step) => {
+          if (step.status !== "Pending") {
+            return step;
+          }
+
+          return {
+            ...step,
+            status,
+            date: "Just now",
+            comment:
+              status === "Approved"
+                ? "Approved from mobile workflow"
+                : status === "Returned"
+                  ? "Returned for correction"
+                  : status === "Rejected"
+                    ? "Rejected from mobile workflow"
+                    : step.comment,
+          };
+        }),
+      };
+    });
   }
 
   return (
@@ -135,7 +222,7 @@ export default function ApprovalsPage() {
             setSelectedFilter(value as "All" | ApprovalStatus)
           }
         >
-          <TabsList className="grid h-11 grid-cols-4 rounded-2xl bg-slate-100 p-1">
+          <TabsList className="grid h-11 grid-cols-5 rounded-2xl bg-slate-100 p-1">
             {approvalFilters.map((filter) => (
               <TabsTrigger
                 key={filter.value}
@@ -197,6 +284,7 @@ export default function ApprovalsPage() {
         approval={selectedApproval}
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
+        onAction={handleApprovalAction}
       />
     </MobileAppShell>
   );
