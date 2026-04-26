@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ChevronRight, Gauge, UserRound } from "lucide-react";
 
 import { PerformanceStatusBadge } from "@/app/features/performance/components/PerformanceStatusBadge";
@@ -19,9 +20,9 @@ export function PerformanceContractItem({
   );
 
   return (
-    <button
-      type="button"
-      className="group w-full border-b border-slate-100 bg-white px-4 py-4 text-left transition hover:bg-slate-50 last:border-b-0"
+    <Link
+      href={`/performance/${contract.id}`}
+      className="group block w-full border-b border-slate-100 bg-white px-4 py-4 text-left transition hover:bg-slate-50 last:border-b-0"
     >
       <div className="flex gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
@@ -79,6 +80,6 @@ export function PerformanceContractItem({
           </div>
         </div>
       </div>
-    </button>
+    </Link>
   );
 }
