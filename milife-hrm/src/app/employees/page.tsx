@@ -1,54 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { Search, UserPlus, Users } from "lucide-react";
+import { Search, SlidersHorizontal, UserPlus, Users } from "lucide-react";
 
 import { MobileAppShell } from "@/app/components/layout/MobileAppShell";
-import { MetricCard } from "@/app/components/shared/MetricCard";
-import { EmployeeCard } from "@/app/features/employees/components/EmployeeCard";
+import { AnimatedList } from "@/app/components/shared/AnimatedList";
+import { AnimatedListItem } from "@/app/components/shared/AnimatedListItem";
+import { EmployeeListItem } from "@/app/features/employees/components/EmployeeListItem";
+import { employees } from "@/app/features/employees/data";
 
-const employees = [
-  {
-    id: "1",
-    staffId: "MIL-0012",
-    name: "Akosua Mensah",
-    email: "akosua.mensah@milife.com",
-    department: "Human Resources",
-    branch: "Head Office",
-    jobTitle: "HR Officer",
-    status: "Active",
-  },
-  {
-    id: "2",
-    staffId: "MIL-0048",
-    name: "Kwame Boateng",
-    email: "kwame.boateng@milife.com",
-    department: "Sales",
-    branch: "Kumasi Branch",
-    jobTitle: "Sales Executive",
-    status: "Probation",
-  },
-  {
-    id: "3",
-    staffId: "MIL-0075",
-    name: "Ama Owusu",
-    email: "ama.owusu@milife.com",
-    department: "Finance",
-    branch: "Head Office",
-    jobTitle: "Accounts Officer",
-    status: "Active",
-  },
-  {
-    id: "4",
-    staffId: "MIL-0104",
-    name: "Kojo Appiah",
-    email: "kojo.appiah@milife.com",
-    department: "Operations",
-    branch: "Takoradi Branch",
-    jobTitle: "Operations Supervisor",
-    status: "Suspended",
-  },
-];
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const statusFilters = ["All", "Active", "Probation", "Suspended"];
 
@@ -88,69 +58,131 @@ export default function EmployeesPage() {
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              View and manage staff profiles, departments, roles, and employment
-              status.
+              View staff profiles, departments, roles, and employment status.
             </p>
           </div>
 
-          <button
+          <Button
             type="button"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm"
+            size="icon"
+            className="h-11 w-11 shrink-0 rounded-full bg-emerald-600 text-white shadow-sm hover:bg-emerald-700"
             aria-label="Add employee"
           >
             <UserPlus className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
       </section>
 
       <section className="px-4">
-        <MetricCard
-          title="Total staff"
-          value="128"
-          helper="112 active employees"
-          icon={Users}
-        />
+        <div className="rounded-3xl bg-slate-950 p-4 text-white shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-slate-300">Total staff</p>
+
+              <p className="mt-2 text-3xl font-bold tracking-tight">128</p>
+
+              <p className="mt-1 text-xs font-medium text-slate-400">
+                112 active employees
+              </p>
+            </div>
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-emerald-300">
+              <Users className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="mt-4 px-4">
-        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm">
-          <Search className="h-5 w-5 text-slate-400" />
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
-          <input
+          <Input
             type="search"
             placeholder="Search employees"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+            className="h-12 rounded-2xl border-slate-200 bg-white pl-10 text-sm shadow-sm"
           />
         </div>
 
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {statusFilters.map((status) => {
-            const isSelected = selectedStatus === status;
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {statusFilters.map((status) => {
+              const isSelected = selectedStatus === status;
 
-            return (
-              <button
-                key={status}
+              return (
+                <Button
+                  key={status}
+                  type="button"
+                  size="sm"
+                  variant={isSelected ? "default" : "outline"}
+                  onClick={() => setSelectedStatus(status)}
+                  className={
+                    isSelected
+                      ? "h-9 shrink-0 rounded-full bg-emerald-600 px-4 text-xs font-semibold text-white hover:bg-emerald-700"
+                      : "h-9 shrink-0 rounded-full border-slate-200 bg-white px-4 text-xs font-semibold text-slate-600"
+                  }
+                >
+                  {status}
+                </Button>
+              );
+            })}
+          </div>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
                 type="button"
-                onClick={() => setSelectedStatus(status)}
-                className={
-                  isSelected
-                    ? "shrink-0 rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm"
-                    : "shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600"
-                }
+                size="icon"
+                variant="outline"
+                className="h-9 w-9 shrink-0 rounded-full border-slate-200 bg-white"
+                aria-label="Open filters"
               >
-                {status}
-              </button>
-            );
-          })}
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+
+            <SheetContent side="bottom" className="rounded-t-3xl">
+              <SheetHeader>
+                <SheetTitle>Filter employees</SheetTitle>
+                <SheetDescription>
+                  Narrow the staff directory by employment status.
+                </SheetDescription>
+              </SheetHeader>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                {statusFilters.map((status) => {
+                  const isSelected = selectedStatus === status;
+
+                  return (
+                    <Button
+                      key={status}
+                      type="button"
+                      variant={isSelected ? "default" : "outline"}
+                      onClick={() => setSelectedStatus(status)}
+                      className={
+                        isSelected
+                          ? "rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700"
+                          : "rounded-2xl border-slate-200 bg-white text-slate-700"
+                      }
+                    >
+                      {status}
+                    </Button>
+                  );
+                })}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </section>
 
       <section className="mt-5 px-4 pb-6">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h3 className="text-base font-bold text-slate-950">Staff list</h3>
+            <h3 className="text-base font-bold text-slate-950">
+              Staff directory
+            </h3>
 
             <p className="text-sm text-slate-500">
               Showing {filteredEmployees.length} of {employees.length} employees
@@ -163,11 +195,15 @@ export default function EmployeesPage() {
         </div>
 
         {filteredEmployees.length > 0 ? (
-          <div className="space-y-3">
-            {filteredEmployees.map((employee) => (
-              <EmployeeCard key={employee.id} employee={employee} />
-            ))}
-          </div>
+          <AnimatedList>
+            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+              {filteredEmployees.map((employee) => (
+                <AnimatedListItem key={employee.id}>
+                  <EmployeeListItem employee={employee} />
+                </AnimatedListItem>
+              ))}
+            </div>
+          </AnimatedList>
         ) : (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-center">
             <p className="text-sm font-semibold text-slate-900">

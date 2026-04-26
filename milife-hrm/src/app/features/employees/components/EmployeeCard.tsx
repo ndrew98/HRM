@@ -1,18 +1,10 @@
+import Link from "next/link";
 import { Mail, MapPin, UserRound } from "lucide-react";
-
 import { StatusBadge } from "@/app/components/shared/StatusBadge";
+import type { Employee } from "@/app/features/employees/data";
 
 type EmployeeCardProps = {
-  employee: {
-    id: string;
-    staffId: string;
-    name: string;
-    email: string;
-    department: string;
-    branch: string;
-    jobTitle: string;
-    status: string;
-  };
+  employee: Employee;
 };
 
 export function EmployeeCard({ employee }: EmployeeCardProps) {
@@ -56,12 +48,12 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="mt-4 w-full rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700"
+          <Link
+            href={`/employees/${employee.id}`}
+            className="mt-4 block w-full rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-center text-sm font-semibold text-emerald-700"
           >
             View profile
-          </button>
+          </Link>
         </div>
       </div>
     </article>
