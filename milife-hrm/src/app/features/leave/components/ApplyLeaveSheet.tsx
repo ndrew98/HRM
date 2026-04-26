@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { differenceInCalendarDays, format } from "date-fns";
+import { eachDayOfInterval, format, isWeekend } from "date-fns";
 
 import { DatePicker } from "@/app/components/shared/DatePicker";
 import { leaveTypes } from "@/app/features/leave/data";
@@ -26,6 +26,18 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
+// Helper function to calculate the number of leave days, excluding weekends
+function calculateWorkingLeaveDays(startDate: Date, endDate: Date) {
+  const days = eachDayOfInterval({
+    start: startDate,
+    end: endDate,
+  });
+
+  const workingDays = days.filter((day) => !isWeekend(day));
+
+  return workingDays.length;
+}
+
 export function ApplyLeaveSheet() {
   const [leaveTypeId, setLeaveTypeId] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>();
@@ -42,7 +54,7 @@ export function ApplyLeaveSheet() {
       return 0;
     }
 
-    return differenceInCalendarDays(endDate, startDate) + 1;
+    return calculateWorkingLeaveDays(startDate, endDate);
   }, [startDate, endDate]);
 
   const hasValidDates = Boolean(startDate && endDate && totalLeaveDays > 0);
@@ -78,6 +90,11 @@ export function ApplyLeaveSheet() {
 
             if (endDate < startDate) {
               toast.error("End date cannot be before start date.");
+              return;
+            }
+
+            if (totalLeaveDays === 0) {
+              toast.error("Selected dates do not include any working days.");
               return;
             }
 
@@ -132,7 +149,7 @@ export function ApplyLeaveSheet() {
           {hasValidDates ? (
             <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-4">
               <p className="text-sm font-semibold text-emerald-800">
-                Leave duration
+                Working leave duration
               </p>
 
               <p className="mt-2 text-3xl font-bold tracking-tight text-emerald-950">
@@ -141,6 +158,10 @@ export function ApplyLeaveSheet() {
 
               <p className="mt-1 text-sm leading-6 text-emerald-700">
                 {format(startDate!, "PPP")} to {format(endDate!, "PPP")}
+              </p>
+
+              <p className="mt-1 text-xs font-medium text-emerald-700">
+                Weekends are excluded from this calculation.
               </p>
 
               {selectedLeaveType ? (
@@ -160,12 +181,12 @@ export function ApplyLeaveSheet() {
           ) : (
             <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-700">
-                Leave duration
+                Working leave duration
               </p>
 
               <p className="mt-1 text-sm leading-6 text-slate-500">
                 Select a start date and end date to calculate the number of
-                leave days.
+                working leave days.
               </p>
             </div>
           )}
