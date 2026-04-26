@@ -44,6 +44,62 @@ const approvalFilters: {
   },
 ];
 
+// This function is used to determine the new stage of the approval based on the action taken by the manager on the approval item. It takes the current status of the approval and the current stage, and returns the new stage after the action is taken.
+function getStageFromStatus(status: ApprovalStatus, currentStage: string) {
+  if (status === "Approved") {
+    return "Completed";
+  }
+
+  if (status === "Returned") {
+    return "Returned to Employee";
+  }
+
+  if (status === "Rejected") {
+    return "Rejected";
+  }
+
+  return currentStage;
+}
+
+function getCommentFromStatus(status: ApprovalStatus) {
+  if (status === "Approved") {
+    return "Approved from mobile workflow";
+  }
+
+  if (status === "Returned") {
+    return "Returned for correction";
+  }
+
+  if (status === "Rejected") {
+    return "Rejected from mobile workflow";
+  }
+
+  return undefined;
+}
+
+function updateApprovalStatus(
+  approval: ApprovalItem,
+  status: ApprovalStatus,
+): ApprovalItem {
+  return {
+    ...approval,
+    status,
+    currentStage: getStageFromStatus(status, approval.currentStage),
+    timeline: approval.timeline.map((step) => {
+      if (step.status !== "Pending") {
+        return step;
+      }
+
+      return {
+        ...step,
+        status,
+        date: "Just now",
+        comment: getCommentFromStatus(status) ?? step.comment,
+      };
+    }),
+  };
+}
+
 export default function ApprovalsPage() {
   const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>(approvals);
 
@@ -85,37 +141,7 @@ export default function ApprovalsPage() {
           return approval;
         }
 
-        return {
-          ...approval,
-          status,
-          currentStage:
-            status === "Approved"
-              ? "Completed"
-              : status === "Returned"
-                ? "Returned to Employee"
-                : status === "Rejected"
-                  ? "Rejected"
-                  : approval.currentStage,
-          timeline: approval.timeline.map((step) => {
-            if (step.status !== "Pending") {
-              return step;
-            }
-
-            return {
-              ...step,
-              status,
-              date: "Just now",
-              comment:
-                status === "Approved"
-                  ? "Approved from mobile workflow"
-                  : status === "Returned"
-                    ? "Returned for correction"
-                    : status === "Rejected"
-                      ? "Rejected from mobile workflow"
-                      : step.comment,
-            };
-          }),
-        };
+        return updateApprovalStatus(approval, status);
       }),
     );
 
@@ -124,37 +150,7 @@ export default function ApprovalsPage() {
         return currentApproval;
       }
 
-      return {
-        ...currentApproval,
-        status,
-        currentStage:
-          status === "Approved"
-            ? "Completed"
-            : status === "Returned"
-              ? "Returned to Employee"
-              : status === "Rejected"
-                ? "Rejected"
-                : currentApproval.currentStage,
-        timeline: currentApproval.timeline.map((step) => {
-          if (step.status !== "Pending") {
-            return step;
-          }
-
-          return {
-            ...step,
-            status,
-            date: "Just now",
-            comment:
-              status === "Approved"
-                ? "Approved from mobile workflow"
-                : status === "Returned"
-                  ? "Returned for correction"
-                  : status === "Rejected"
-                    ? "Rejected from mobile workflow"
-                    : step.comment,
-          };
-        }),
-      };
+      return updateApprovalStatus(currentApproval, status);
     });
   }
 
