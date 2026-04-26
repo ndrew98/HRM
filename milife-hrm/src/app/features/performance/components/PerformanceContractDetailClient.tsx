@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { ArrowLeft, ClipboardCheck, Gauge, Star, Target } from "lucide-react";
 
@@ -20,6 +21,17 @@ import type {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type PerformanceContractDetailClientProps = {
@@ -119,6 +131,10 @@ export function PerformanceContractDetailClient({
 
   const rating = getRatingFromScore(finalScore);
 
+  const canManagerReview = contract.status === "Pending Review";
+  const canSubmitSelfAppraisal =
+    contract.status !== "Approved" && contract.status !== "Pending Review";
+
   function handleKpiSelfScoreChange(itemId: string, score: RatingValue) {
     setContract((currentContract) => ({
       ...currentContract,
@@ -158,6 +174,83 @@ export function PerformanceContractDetailClient({
         "manager",
       ),
     }));
+  }
+
+  function handleSubmitAppraisal() {
+    if (finalScore === 0) {
+      toast.error(
+        "Please score at least one KPI or competency before submitting.",
+      );
+      return;
+    }
+
+    setContract((currentContract) => ({
+      ...currentContract,
+      status: "Pending Review",
+      currentStage: "Submitted for manager review",
+      finalScore,
+      rating,
+      timeline: currentContract.timeline.map((step) => {
+        if (step.title !== "Self-appraisal") {
+          return step;
+        }
+
+        return {
+          ...step,
+          status: "Completed",
+          date: "Just now",
+          comment: "Self-appraisal submitted from mobile workflow.",
+        };
+      }),
+    }));
+
+    toast.success("Appraisal submitted for review.");
+  }
+
+  function handleManagerApprove() {
+    setContract((currentContract) => ({
+      ...currentContract,
+      status: "Approved",
+      currentStage: "Manager review completed",
+      finalScore,
+      rating,
+      timeline: currentContract.timeline.map((step) => {
+        if (step.title !== "Manager review") {
+          return step;
+        }
+
+        return {
+          ...step,
+          status: "Completed",
+          date: "Just now",
+          comment: "Manager review approved from mobile workflow.",
+        };
+      }),
+    }));
+
+    toast.success("Manager review approved.");
+  }
+
+  function handleManagerReturn() {
+    setContract((currentContract) => ({
+      ...currentContract,
+      status: "Returned",
+      currentStage: "Returned to employee for correction",
+      timeline: currentContract.timeline.map((step) => {
+        if (step.title !== "Manager review") {
+          return step;
+        }
+
+        return {
+          ...step,
+          status: "Returned",
+          date: "Just now",
+          comment: "Returned for employee correction.",
+        };
+      }),
+    }));
+
+    toast.info("Appraisal returned to employee.");
   }
 
   return (
@@ -365,6 +458,172 @@ export function PerformanceContractDetailClient({
                   </div>
                 </div>
               </div>
+
+              {canManagerReview ? (
+                <div className="mt-3 rounded-3xl border border-amber-100 bg-amber-50 p-4">
+                  <p className="text-sm font-semibold text-amber-800">
+                    Manager review required
+                  </p>
+
+                  <p className="mt-1 text-sm leading-6 text-amber-700">
+                    Review the KPI and competency scores before approving or
+                    returning this appraisal.
+                  </p>
+                </div>
+              ) : null}
+
+              {canSubmitSelfAppraisal ? (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button className="mt-4 h-11 w-full rounded-full bg-emerald-600 font-semibold text-white hover:bg-emerald-700">
+                      Submit Appraisal
+                    </Button>
+                  </AlertDialogTrigger>
+
+                  <AlertDialogContent className="rounded-3xl">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Submit appraisal?</AlertDialogTitle>
+
+                      <AlertDialogDescription>
+                        This will submit the current scores for review. You
+                        should confirm the KPI and competency scores before
+                        continuing.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-slate-500">
+                          Final score
+                        </p>
+
+                        <p className="text-sm font-bold text-slate-950">
+                          {finalScore > 0 ? finalScore : "-"}
+                        </p>
+                      </div>
+
+                      <div className="mt-2 flex items-center justify-between">
+                        <p className="text-sm font-medium text-slate-500">
+                          Rating
+                        </p>
+
+                        <p className="text-sm font-bold text-emerald-700">
+                          {rating}
+                        </p>
+                      </div>
+                    </div>
+
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="rounded-full">
+                        Cancel
+                      </AlertDialogCancel>
+
+                      <AlertDialogAction
+                        className="rounded-full bg-emerald-600 text-white hover:bg-emerald-700"
+                        onClick={handleSubmitAppraisal}
+                      >
+                        Submit
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              ) : null}
+
+              {canManagerReview ? (
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="h-11 rounded-full border-purple-200 text-purple-700"
+                      >
+                        Return
+                      </Button>
+                    </AlertDialogTrigger>
+
+                    <AlertDialogContent className="rounded-3xl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Return appraisal?</AlertDialogTitle>
+
+                        <AlertDialogDescription>
+                          This will return the appraisal to the employee for
+                          correction. Use this when scores, comments, or
+                          evidence need to be improved.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="rounded-full">
+                          Cancel
+                        </AlertDialogCancel>
+
+                        <AlertDialogAction
+                          className="rounded-full bg-purple-600 text-white hover:bg-purple-700"
+                          onClick={handleManagerReturn}
+                        >
+                          Return
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button className="h-11 rounded-full bg-emerald-600 font-semibold text-white hover:bg-emerald-700">
+                        Approve
+                      </Button>
+                    </AlertDialogTrigger>
+
+                    <AlertDialogContent className="rounded-3xl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Approve manager review?
+                        </AlertDialogTitle>
+
+                        <AlertDialogDescription>
+                          This will approve the current appraisal scores and
+                          move the contract forward in the performance workflow.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+
+                      <div className="rounded-2xl bg-slate-50 p-4">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-slate-500">
+                            Final score
+                          </p>
+
+                          <p className="text-sm font-bold text-slate-950">
+                            {finalScore > 0 ? finalScore : "-"}
+                          </p>
+                        </div>
+
+                        <div className="mt-2 flex items-center justify-between">
+                          <p className="text-sm font-medium text-slate-500">
+                            Rating
+                          </p>
+
+                          <p className="text-sm font-bold text-emerald-700">
+                            {rating}
+                          </p>
+                        </div>
+                      </div>
+
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="rounded-full">
+                          Cancel
+                        </AlertDialogCancel>
+
+                        <AlertDialogAction
+                          className="rounded-full bg-emerald-600 text-white hover:bg-emerald-700"
+                          onClick={handleManagerApprove}
+                        >
+                          Approve
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              ) : null}
             </AnimatedTabPanel>
           </TabsContent>
 
