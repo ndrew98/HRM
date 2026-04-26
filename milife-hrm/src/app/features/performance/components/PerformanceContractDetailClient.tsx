@@ -12,6 +12,7 @@ import { AnimatedTabPanel } from "@/app/components/shared/AnimatedTabPanel";
 import { EditablePerformanceAssessmentItem } from "@/app/features/performance/components/EditablePerformanceAssessmentItem";
 import { PerformanceStatusBadge } from "@/app/features/performance/components/PerformanceStatusBadge";
 import { PerformanceTimeline } from "@/app/features/performance/components/PerformanceTimeline";
+
 import type {
   PerformanceContract,
   PerformanceContractItem,
@@ -21,6 +22,7 @@ import type {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -105,6 +107,7 @@ export function PerformanceContractDetailClient({
   initialContract,
 }: PerformanceContractDetailClientProps) {
   const [contract, setContract] = useState(initialContract);
+  const [managerComment, setManagerComment] = useState("");
 
   const kpiProgress = calculateProgress(contract.kpis);
   const competencyProgress = calculateProgress(contract.competencies);
@@ -208,6 +211,9 @@ export function PerformanceContractDetailClient({
   }
 
   function handleManagerApprove() {
+    const comment =
+      managerComment.trim() || "Manager review approved from mobile workflow.";
+
     setContract((currentContract) => ({
       ...currentContract,
       status: "Approved",
@@ -223,15 +229,25 @@ export function PerformanceContractDetailClient({
           ...step,
           status: "Completed",
           date: "Just now",
-          comment: "Manager review approved from mobile workflow.",
+          comment,
         };
       }),
     }));
 
+    setManagerComment("");
     toast.success("Manager review approved.");
   }
 
   function handleManagerReturn() {
+    const comment = managerComment.trim();
+
+    if (!comment) {
+      toast.error(
+        "Please add a return comment before returning the appraisal.",
+      );
+      return;
+    }
+
     setContract((currentContract) => ({
       ...currentContract,
       status: "Returned",
@@ -245,11 +261,12 @@ export function PerformanceContractDetailClient({
           ...step,
           status: "Returned",
           date: "Just now",
-          comment: "Returned for employee correction.",
+          comment,
         };
       }),
     }));
 
+    setManagerComment("");
     toast.info("Appraisal returned to employee.");
   }
 
@@ -472,6 +489,26 @@ export function PerformanceContractDetailClient({
                 </div>
               ) : null}
 
+              {canManagerReview ? (
+                <div className="mt-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <label className="text-sm font-semibold text-slate-950">
+                    Manager comment
+                  </label>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Add a note for the employee or HR. A comment is required
+                    when returning an appraisal.
+                  </p>
+
+                  <Textarea
+                    value={managerComment}
+                    onChange={(event) => setManagerComment(event.target.value)}
+                    placeholder="Example: Please add evidence for the document compliance KPI."
+                    className="mt-3 min-h-24 rounded-2xl"
+                  />
+                </div>
+              ) : null}
+
               {canSubmitSelfAppraisal ? (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -547,8 +584,8 @@ export function PerformanceContractDetailClient({
 
                         <AlertDialogDescription>
                           This will return the appraisal to the employee for
-                          correction. Use this when scores, comments, or
-                          evidence need to be improved.
+                          correction. Your manager comment will be added to the
+                          workflow timeline.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
 
@@ -583,6 +620,7 @@ export function PerformanceContractDetailClient({
                         <AlertDialogDescription>
                           This will approve the current appraisal scores and
                           move the contract forward in the performance workflow.
+                          Your comment will be saved if provided.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
 
