@@ -3,10 +3,17 @@
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { eachDayOfInterval, format, isWeekend } from "date-fns";
+import {
+  eachDayOfInterval,
+  format,
+  isSameDay,
+  isWeekend,
+  parseISO,
+} from "date-fns";
 
 import { DatePicker } from "@/app/components/shared/DatePicker";
 import { leaveTypes } from "@/app/features/leave/data";
+import { publicHolidays } from "@/app/features/leave/components/holidays";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,15 +34,38 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 // Helper function to calculate the number of leave days, excluding weekends
+function getPublicHolidayForDate(date: Date) {
+  return publicHolidays.find((holiday) =>
+    isSameDay(parseISO(holiday.date), date),
+  );
+}
+
 function calculateWorkingLeaveDays(startDate: Date, endDate: Date) {
   const days = eachDayOfInterval({
     start: startDate,
     end: endDate,
   });
 
-  const workingDays = days.filter((day) => !isWeekend(day));
+  const workingDays = days.filter((day) => {
+    const isPublicHoliday = Boolean(getPublicHolidayForDate(day));
+
+    return !isWeekend(day) && !isPublicHoliday;
+  });
 
   return workingDays.length;
+}
+
+function getExcludedPublicHolidays(startDate: Date, endDate: Date) {
+  const days = eachDayOfInterval({
+    start: startDate,
+    end: endDate,
+  });
+
+  return days
+    .map((day) => getPublicHolidayForDate(day))
+    .filter((holiday): holiday is NonNullable<typeof holiday> =>
+      Boolean(holiday),
+    );
 }
 
 export function ApplyLeaveSheet() {
@@ -55,6 +85,14 @@ export function ApplyLeaveSheet() {
     }
 
     return calculateWorkingLeaveDays(startDate, endDate);
+  }, [startDate, endDate]);
+
+  const excludedPublicHolidays = useMemo(() => {
+    if (!startDate || !endDate || endDate < startDate) {
+      return [];
+    }
+
+    return getExcludedPublicHolidays(startDate, endDate);
   }, [startDate, endDate]);
 
   const hasValidDates = Boolean(startDate && endDate && totalLeaveDays > 0);
@@ -161,8 +199,27 @@ export function ApplyLeaveSheet() {
               </p>
 
               <p className="mt-1 text-xs font-medium text-emerald-700">
-                Weekends are excluded from this calculation.
+                Weekends and Public holidays are excluded from this calculation.
               </p>
+
+              {excludedPublicHolidays.length > 0 ? (
+                <div className="mt-3 rounded-2xl bg-white px-3 py-2">
+                  <p className="text-xs font-bold text-slate-700">
+                    Public holidays excluded
+                  </p>
+
+                  <ul className="mt-2 space-y-1">
+                    {excludedPublicHolidays.map((holiday) => (
+                      <li
+                        key={`${holiday.date}-${holiday.name}`}
+                        className="text-xs text-slate-600"
+                      >
+                        {format(parseISO(holiday.date), "PPP")} · {holiday.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
 
               {selectedLeaveType ? (
                 <p className="mt-2 text-xs font-medium text-emerald-700">
