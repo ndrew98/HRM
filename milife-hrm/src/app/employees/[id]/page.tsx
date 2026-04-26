@@ -15,6 +15,8 @@ import {
 
 import { MobileAppShell } from "@/app/components/layout/MobileAppShell";
 import { StatusBadge } from "@/app/components/shared/StatusBadge";
+import { FadeIn } from "@/app/components/shared/FadeIn";
+import { AnimatedTabPanel } from "@/app/components/shared/AnimatedTabPanel";
 import { employees } from "@/app/features/employees/data";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -54,16 +56,17 @@ export default async function EmployeeProfilePage({
               Back to employees
             </Link>
           </Button>
+          <FadeIn>
+            <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-center">
+              <p className="text-sm font-semibold text-slate-900">
+                Employee not found
+              </p>
 
-          <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-center">
-            <p className="text-sm font-semibold text-slate-900">
-              Employee not found
-            </p>
-
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              The employee profile you are looking for does not exist.
-            </p>
-          </div>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                The employee profile you are looking for does not exist.
+              </p>
+            </div>
+          </FadeIn>
         </section>
       </MobileAppShell>
     );
@@ -78,63 +81,64 @@ export default async function EmployeeProfilePage({
             Back to employees
           </Link>
         </Button>
+        <FadeIn>
+          <div className="overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-sm">
+            <div className="p-5">
+              <div className="flex items-start gap-4">
+                <Avatar className="h-16 w-16 rounded-3xl border border-white/10">
+                  <AvatarFallback className="rounded-3xl bg-emerald-500 text-lg font-bold text-white">
+                    {getInitials(employee.name)}
+                  </AvatarFallback>
+                </Avatar>
 
-        <div className="overflow-hidden rounded-[2rem] bg-slate-950 text-white shadow-sm">
-          <div className="p-5">
-            <div className="flex items-start gap-4">
-              <Avatar className="h-16 w-16 rounded-3xl border border-white/10">
-                <AvatarFallback className="rounded-3xl bg-emerald-500 text-lg font-bold text-white">
-                  {getInitials(employee.name)}
-                </AvatarFallback>
-              </Avatar>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="truncate text-xl font-bold">
+                        {employee.name}
+                      </h2>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="truncate text-xl font-bold">
-                      {employee.name}
-                    </h2>
+                      <p className="mt-1 text-sm font-medium text-slate-300">
+                        {employee.staffId}
+                      </p>
+                    </div>
 
-                    <p className="mt-1 text-sm font-medium text-slate-300">
-                      {employee.staffId}
-                    </p>
+                    <StatusBadge status={employee.status} />
                   </div>
 
-                  <StatusBadge status={employee.status} />
+                  <p className="mt-3 text-sm font-semibold text-white">
+                    {employee.jobTitle}
+                  </p>
+
+                  <p className="mt-1 text-sm text-slate-300">
+                    {employee.department} · {employee.branch}
+                  </p>
+                </div>
+              </div>
+
+              <Separator className="my-5 bg-white/10" />
+
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-medium text-slate-300">
+                    Profile completion
+                  </p>
+
+                  <p className="text-xs font-bold text-emerald-300">82%</p>
                 </div>
 
-                <p className="mt-3 text-sm font-semibold text-white">
-                  {employee.jobTitle}
-                </p>
+                <Progress value={82} className="h-2 bg-white/10" />
 
-                <p className="mt-1 text-sm text-slate-300">
-                  {employee.department} · {employee.branch}
+                <p className="mt-2 text-xs leading-5 text-slate-400">
+                  Missing emergency contact and one employment document.
                 </p>
               </div>
-            </div>
-
-            <Separator className="my-5 bg-white/10" />
-
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs font-medium text-slate-300">
-                  Profile completion
-                </p>
-
-                <p className="text-xs font-bold text-emerald-300">82%</p>
-              </div>
-
-              <Progress value={82} className="h-2 bg-white/10" />
-
-              <p className="mt-2 text-xs leading-5 text-slate-400">
-                Missing emergency contact and one employment document.
-              </p>
             </div>
           </div>
-        </div>
+        </FadeIn>
       </section>
 
-      <section className="px-4 pb-6">
+      <FadeIn delay={0.08} className="px-4 pb-6">
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid h-11 w-full grid-cols-4 rounded-2xl bg-slate-100 p-1">
             <TabsTrigger value="overview" className="rounded-xl text-xs">
@@ -154,137 +158,147 @@ export default async function EmployeeProfilePage({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="mt-4 space-y-5">
-            <ProfileSection title="Employment details">
-              <ProfileInfoRow
-                icon={Building2}
-                label="Department"
-                value={employee.department}
-              />
+          <TabsContent value="overview" className="mt-4 ">
+            <AnimatedTabPanel className="space-y-5">
+              <ProfileSection title="Employment details">
+                <ProfileInfoRow
+                  icon={Building2}
+                  label="Department"
+                  value={employee.department}
+                />
 
-              <ProfileInfoRow
-                icon={BriefcaseBusiness}
-                label="Job title"
-                value={employee.jobTitle}
-              />
+                <ProfileInfoRow
+                  icon={BriefcaseBusiness}
+                  label="Job title"
+                  value={employee.jobTitle}
+                />
 
-              <ProfileInfoRow
-                icon={MapPin}
-                label="Branch"
-                value={employee.branch}
-              />
+                <ProfileInfoRow
+                  icon={MapPin}
+                  label="Branch"
+                  value={employee.branch}
+                />
 
-              <ProfileInfoRow
-                icon={ShieldCheck}
-                label="Supervisor"
-                value={employee.supervisor}
-              />
+                <ProfileInfoRow
+                  icon={ShieldCheck}
+                  label="Supervisor"
+                  value={employee.supervisor}
+                />
 
-              <ProfileInfoRow
-                icon={CalendarDays}
-                label="Date joined"
-                value={employee.dateJoined}
-              />
-            </ProfileSection>
+                <ProfileInfoRow
+                  icon={CalendarDays}
+                  label="Date joined"
+                  value={employee.dateJoined}
+                />
+              </ProfileSection>
 
-            <ProfileSection title="Contact details">
-              <ProfileInfoRow
-                icon={Mail}
-                label="Work email"
-                value={employee.email}
-              />
+              <ProfileSection title="Contact details">
+                <ProfileInfoRow
+                  icon={Mail}
+                  label="Work email"
+                  value={employee.email}
+                />
 
-              <ProfileInfoRow
-                icon={Phone}
-                label="Phone"
-                value={employee.phone}
-              />
-            </ProfileSection>
+                <ProfileInfoRow
+                  icon={Phone}
+                  label="Phone"
+                  value={employee.phone}
+                />
+              </ProfileSection>
+            </AnimatedTabPanel>
           </TabsContent>
 
           <TabsContent value="leave" className="mt-4">
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
-                  <WalletCards className="h-5 w-5" />
-                </div>
+            <AnimatedTabPanel>
+              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                    <WalletCards className="h-5 w-5" />
+                  </div>
 
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">
-                    Annual leave balance
-                  </p>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-950">
+                      Annual leave balance
+                    </p>
 
-                  <p className="mt-1 text-2xl font-bold text-slate-950">
-                    {employee.leaveBalance}
-                  </p>
+                    <p className="mt-1 text-2xl font-bold text-slate-950">
+                      {employee.leaveBalance}
+                    </p>
 
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    Leave history and requests will appear here when connected
-                    to the backend.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="documents" className="mt-4">
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
-                  <FileText className="h-5 w-5" />
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">
-                    Employee documents
-                  </p>
-
-                  <p className="mt-1 text-2xl font-bold text-slate-950">
-                    {employee.documents}
-                  </p>
-
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    Appointment letters, certificates, contracts, and IDs will
-                    be managed here.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="performance" className="mt-4">
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
-                  <UserRound className="h-5 w-5" />
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">
-                    Current appraisal status
-                  </p>
-
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
-                    {employee.appraisalStatus}
-                  </p>
-
-                  <div className="mt-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="text-xs font-medium text-slate-500">
-                        Cycle progress
-                      </p>
-
-                      <p className="text-xs font-bold text-emerald-700">45%</p>
-                    </div>
-
-                    <Progress value={45} className="h-2" />
+                    <p className="mt-1 text-sm leading-6 text-slate-500">
+                      Leave history and requests will appear here when connected
+                      to the backend.
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
+            </AnimatedTabPanel>
+          </TabsContent>
+
+          <TabsContent value="documents" className="mt-4">
+            <AnimatedTabPanel>
+              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                    <FileText className="h-5 w-5" />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-slate-950">
+                      Employee documents
+                    </p>
+
+                    <p className="mt-1 text-2xl font-bold text-slate-950">
+                      {employee.documents}
+                    </p>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-500">
+                      Appointment letters, certificates, contracts, and IDs will
+                      be managed here.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </AnimatedTabPanel>
+          </TabsContent>
+
+          <TabsContent value="performance" className="mt-4">
+            <AnimatedTabPanel>
+              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                    <UserRound className="h-5 w-5" />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-slate-950">
+                      Current appraisal status
+                    </p>
+
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      {employee.appraisalStatus}
+                    </p>
+
+                    <div className="mt-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="text-xs font-medium text-slate-500">
+                          Cycle progress
+                        </p>
+
+                        <p className="text-xs font-bold text-emerald-700">
+                          45%
+                        </p>
+                      </div>
+
+                      <Progress value={45} className="h-2" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </AnimatedTabPanel>
           </TabsContent>
         </Tabs>
-      </section>
+      </FadeIn>
     </MobileAppShell>
   );
 }
