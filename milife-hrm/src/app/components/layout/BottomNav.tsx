@@ -36,7 +36,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky bottom-0 z-30 border-t border-slate-200 bg-white px-2 pb-3 pt-2">
+    <nav className="sticky bottom-0 z-30 border-t border-slate-200 bg-white px-2 pb-3 pt-2 lg:hidden">
       <div className="grid grid-cols-5 gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
